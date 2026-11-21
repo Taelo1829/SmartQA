@@ -1,0 +1,16 @@
+{
+  "name": "@smartqa/worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@smartqa/db": "*",
+    "@smartqa/engine": "*",
+    "@smartqa/jobs": "*",
+    "@smartqa/shared": "*"
+  }
+}

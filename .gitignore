@@ -1,0 +1,25 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# local runtime state (durable file-store adapter, evidence objects, logs)
+.data/
+coverage/
+test-results/
+playwright-report/
+
+# local package manager state
+.pnpm-store/
+.pnpm-cache/
+
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

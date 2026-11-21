@@ -1,0 +1,380 @@
+// SmartQA database schema (PostgreSQL via Prisma).
+//
+// Design notes:
+//  * Nested, engine-owned structures (run config, progress, metric samples,
+//    reproduction metadata) are stored as JSONB: they are read as a whole and
+//    never queried field-by-field. This keeps the schema small while preserving
+//    strong typing at the application boundary (see packages/shared).
+//  * Every table that belongs to a run is indexed by runId: reporting reads are
+//    always scoped to a single run.
+//  * SessionVault holds AES-256-GCM ciphertext only. Plaintext storage state
+//    never reaches the database.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sites         Site[]
+  runs          TestRun[]
+  authSessions  AuthSession[]
+  vaultEntries  SessionVault[]
+  jobs          JobRecord[]
+  auditLogs     AuditLog[]
+  aiDecisions   AiDecision[]
+}
+
+model AuthSession {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Site {
+  id                        String    @id @default(cuid())
+  userId                    String
+  origin                    String
+  name                      String
+  authorizationConfirmedAt  DateTime
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  lastRunAt                 DateTime?
+  runCount                  Int       @default(0)
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runs TestRun[]
+
+  @@unique([userId, origin])
+  @@index([userId, lastRunAt])
+}
+
+model TestRun {
+  id                 String    @id @default(cuid())
+  userId             String
+  siteId             String?
+  url                String
+  origin             String
+  mode               String
+  status             String
+  config             Json
+  authState          String   @default("none")
+  progress           Json
+  summary            Json?
+  coverage           Json?
+  error              String?
+  workerId           String?
+  createdAt          DateTime @default(now())
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  durationMs         Int?
+  heartbeatAt        DateTime?
+  cancelRequestedAt  DateTime?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site       Site?      @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  pages      PageState[]
+  actions    ActionRecord[]
+  findings   Finding[]
+  evidence   Evidence[]
+  snapshots  MetricSnapshot[]
+  dimensions FilterDimension[]
+  combinations FilterCombination[]
+  checks     CheckResult[]
+  logs       RunLog[]
+  jobs       JobRecord[]
+  aiDecisions AiDecision[]
+
+  @@index([userId, createdAt])
+  @@index([status, heartbeatAt])
+  @@index([siteId])
+}
+
+model PageState {
+  id               String    @id @default(cuid())
+  runId            String
+  url              String
+  normalizedUrl    String
+  title            String
+  signature        String
+  depth            Int
+  parentStateId    String?
+  viaActionId      String?
+  discoveredAt     DateTime  @default(now())
+  visitedAt        DateTime?
+  visitCount       Int       @default(0)
+  interactiveCount Int       @default(0)
+  screenshotId     String?
+  skeleton         Boolean   @default(false)
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, normalizedUrl])
+  @@index([runId, signature])
+}
+
+model ActionRecord {
+  id              String    @id @default(cuid())
+  runId           String
+  pageStateId     String
+  kind            String
+  status          String
+  element         Json?
+  elementLabel    String
+  value           String?
+  description     String
+  destructiveRisk String    @default("none")
+  startedAt       DateTime  @default(now())
+  durationMs      Int?
+  resultStateId   String?
+  urlBefore       String
+  urlAfter        String?
+  outcome         String    @default("unknown")
+  error           String?
+  signals         Json?
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, startedAt])
+}
+
+model Finding {
+  id              String   @id @default(cuid())
+  runId           String
+  category        String
+  severity        String
+  confidence      String
+  status          String
+  title           String
+  description     String
+  expected        String?
+  observed        String
+  pageUrl         String
+  pageTitle       String?
+  pageStateId     String?
+  actionId        String?
+  elementLabel    String?
+  selector        String?
+  calculation     Json?
+  reproduction    Json
+  evidence        Json
+  fingerprint     String
+  tags            String[]
+  suspectedReason String?
+  occurrenceCount Int      @default(1)
+  firstSeenAt     DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, severity])
+  @@index([runId, category])
+  @@index([runId, fingerprint])
+}
+
+model Evidence {
+  id          String   @id @default(cuid())
+  runId       String
+  findingId   String?
+  kind        String
+  label       String
+  contentType String
+  sizeBytes   Int
+  checksum    String
+  storageKey  String   @unique
+  createdAt   DateTime @default(now())
+  metadata    Json
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([findingId])
+}
+
+model MetricSnapshot {
+  id            String   @id @default(cuid())
+  runId         String
+  pageStateId   String
+  combinationId String?
+  pageUrl       String
+  capturedAt    DateTime @default(now())
+  metrics       Json
+  table         Json?
+  rowCount      Int?
+  notes         String?
+  viewport      String
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, capturedAt])
+}
+
+model FilterDimension {
+  id           String @id @default(cuid())
+  runId        String
+  pageStateId  String
+  label        String
+  kind         String
+  selector     String
+  options      Json
+  optionSource String
+  multiple     Boolean @default(false)
+  notes        String?
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+model FilterCombination {
+  id          String   @id @default(cuid())
+  runId       String
+  pageStateId String
+  kind        String
+  selections  Json
+  order       String[]
+  state       String
+  plannedAt   DateTime @default(now())
+  executedAt  DateTime?
+  snapshotId  String?
+  error       String?
+  stateKey    String
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, stateKey])
+}
+
+model CheckResult {
+  id            String   @id @default(cuid())
+  runId         String
+  kind          String
+  title         String
+  status        String
+  detail        String
+  pageUrl       String
+  actionId      String?
+  pageStateId   String?
+  combinationId String?
+  evidenceIds   String[]
+  deterministic Boolean  @default(true)
+  calculation   Json?
+  createdAt     DateTime @default(now())
+  durationMs    Int?
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, status])
+  @@index([runId, kind])
+}
+
+model SessionVault {
+  id          String    @id @default(cuid())
+  userId      String
+  siteId      String
+  runId       String?
+  origin      String
+  ciphertext  String
+  iv          String
+  authTag     String
+  keyVersion  Int       @default(1)
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, siteId])
+  @@index([expiresAt])
+}
+
+model JobRecord {
+  id          String    @id @default(cuid())
+  kind        String
+  runId       String?
+  userId      String
+  payload     Json
+  state       String
+  priority    Int       @default(0)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  error       String?
+  workerId    String?
+
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  run  TestRun? @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([state, priority, createdAt])
+  @@index([runId])
+}
+
+model RunLog {
+  id       String   @id @default(cuid())
+  runId    String
+  seq      Int
+  level    String
+  message  String
+  actionId String?
+  at       DateTime
+  data     Json?
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, seq])
+  @@index([runId, at])
+}
+
+model AiDecision {
+  id       String   @id @default(cuid())
+  runId    String
+  userId   String
+  purpose  String
+  summary  String
+  accepted Boolean
+  at       DateTime @default(now())
+  tokens   Int?
+
+  run  TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  user User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+model AuditLog {
+  id     String   @id @default(cuid())
+  userId String?
+  runId  String?
+  action String
+  detail Json?
+  ip     String?
+  at     DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, at])
+  @@index([action, at])
+}

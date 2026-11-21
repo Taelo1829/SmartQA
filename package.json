@@ -1,0 +1,72 @@
+{
+  "name": "smartqa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Autonomous AI-powered website testing platform",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @smartqa/web",
+    "dev:web": "npm run dev --workspace @smartqa/web",
+    "build": "npm run build --workspace @smartqa/web",
+    "start": "npm run start --workspace @smartqa/web",
+    "start:web": "npm run start --workspace @smartqa/web",
+    "worker": "npm run start --workspace @smartqa/worker",
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "db:generate": "npm run generate --workspace @smartqa/db",
+    "db:migrate": "npm run migrate --workspace @smartqa/db",
+    "smoke": "tsx scripts/smoke.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "6.2.1",
+    "@radix-ui/react-accordion": "^1.2.2",
+    "@radix-ui/react-checkbox": "^1.1.3",
+    "@radix-ui/react-dialog": "^1.1.4",
+    "@radix-ui/react-dropdown-menu": "^2.1.4",
+    "@radix-ui/react-label": "^2.1.1",
+    "@radix-ui/react-popover": "^1.1.4",
+    "@radix-ui/react-progress": "^1.1.1",
+    "@radix-ui/react-scroll-area": "^1.2.2",
+    "@radix-ui/react-select": "^2.1.4",
+    "@radix-ui/react-separator": "^1.1.1",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@radix-ui/react-switch": "^1.1.2",
+    "@radix-ui/react-tabs": "^1.1.2",
+    "@radix-ui/react-tooltip": "^1.1.6",
+    "bullmq": "^5.34.10",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "ioredis": "^5.4.2",
+    "lucide-react": "^0.468.0",
+    "next": "15.5.29",
+    "playwright": "^1.55.0",
+    "playwright-core": "1.65.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "recharts": "^2.15.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.4",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "npm-run-all2": "^7.0.2",
+    "postcss": "^8.4.49",
+    "prisma": "6.2.1",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

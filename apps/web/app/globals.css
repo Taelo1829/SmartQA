@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 7 10 15;
+    --foreground: 230 237 246;
+    --panel: 11 17 26;
+    --card: 11 17 26;
+    --card-foreground: 230 237 246;
+    --popover: 13 20 31;
+    --popover-foreground: 230 237 246;
+    --primary: 34 211 238;
+    --primary-foreground: 4 33 43;
+    --secondary: 167 139 250;
+    --secondary-foreground: 20 11 40;
+    --muted: 17 26 39;
+    --muted-foreground: 140 160 184;
+    --accent: 18 32 46;
+    --accent-foreground: 215 233 247;
+    --destructive: 248 113 113;
+    --destructive-foreground: 42 11 11;
+    --border: 27 37 50;
+    --input: 27 37 50;
+    --ring: 34 211 238;
+    --radius: 0.6rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-semibold tracking-tight;
+  }
+
+  ::selection {
+    background: rgb(34 211 238 / 0.28);
+    color: #f4fbff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #22303f;
+    border: 2px solid #0b111a;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2e4054;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-lg border border-border bg-card bg-panel-glow;
+  }
+
+  .panel-header {
+    @apply flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3;
+  }
+
+  .section-label {
+    @apply text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  .mono {
+    @apply font-mono text-[12px] tabular-nums;
+  }
+
+  .grid-dots {
+    background-image: radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.16) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  .hero-grid {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.22) 1px, transparent 0),
+      linear-gradient(to right, rgb(27 37 50 / 0.55) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(27 37 50 / 0.55) 1px, transparent 1px);
+    background-size: 22px 22px, 88px 88px, 88px 88px;
+    mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.65) 55%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.65) 55%, transparent 100%);
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #22303f transparent;
+  }
+
+  .text-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  .balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0b111a !important;
+    font-size: 11pt;
+  }
+
+  a {
+    color: #0b111a !important;
+    text-decoration: underline;
+  }
+
+  /* Force the printable report onto a light, readable document. */
+  .report-doc,
+  .report-doc * {
+    color: #111827 !important;
+    background: transparent !important;
+    border-color: #d1d5db !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .report-doc .report-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-doc img {
+    max-height: 160px;
+    width: auto;
+  }
+}

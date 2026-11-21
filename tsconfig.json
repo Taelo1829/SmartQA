@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "packages/shared/src/**/*.ts",
+    "packages/db/src/**/*.ts",
+    "packages/engine/src/**/*.ts",
+    "packages/jobs/src/**/*.ts",
+    "apps/worker/src/**/*.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts",
+    "vitest.e2e.config.ts"
+  ],
+  "exclude": ["node_modules", ".next", "**/node_modules/**"]
+}

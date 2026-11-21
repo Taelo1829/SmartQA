@@ -1,0 +1,16 @@
+{
+  "name": "@smartqa/jobs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@smartqa/shared": "*",
+    "bullmq": "^5.34.10",
+    "ioredis": "^5.4.2"
+  }
+}
